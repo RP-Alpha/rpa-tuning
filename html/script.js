@@ -150,10 +150,11 @@ function showCategories() {
 }
 
 function applyMod(cat, index, price) {
+    // Trigger Server check instead of applying directly
     fetch(`https://${GetParentResourceName()}/applyMod`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modType: cat.modType, modIndex: index, price: price, type: cat.type })
+        body: JSON.stringify({ modType: cat.modType, modIndex: index, price: price, type: cat.type, modLabel: cat.label })
     });
 }
 

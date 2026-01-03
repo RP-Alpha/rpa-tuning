@@ -62,6 +62,16 @@ RegisterNUICallback('applyMod', function(data, cb)
     cb('ok')
 end)
 
+RegisterNetEvent('rpa-tuning:client:applyModSecured', function(data)
+    local ped = PlayerPedId()
+    local veh = GetVehiclePedIsIn(ped, false)
+    if data.type == 'custom_color' then
+        SetVehicleColours(veh, data.modIndex, data.modIndex)
+    else
+        SetVehicleMod(veh, data.modType, data.modIndex, false)
+    end
+end)
+
 RegisterNUICallback('applyLights', function(data, cb)
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
