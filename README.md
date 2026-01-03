@@ -1,22 +1,49 @@
 # rpa-tuning
 
-A modern, NUI-based vehicle modification shop for FiveM.
+<div align="center">
 
-## Features
-- **Modern UI**: sleek, dark-themed Sidebar UI replacing native menus.
-- **Dynamic Categories**: Automatically detects available mod types for the vehicle.
-- **Live Preview**: Mods are applied instantly for preview.
-- **Target Integration**: Access mod shops via `rpa-lib` Target system.
+![GitHub Release](https://img.shields.io/github/v/release/RP-Alpha/rpa-tuning?style=for-the-badge&logo=github&color=blue)
+![GitHub commits](https://img.shields.io/github/commits-since/RP-Alpha/rpa-tuning/latest?style=for-the-badge&logo=git&color=green)
+![License](https://img.shields.io/github/license/RP-Alpha/rpa-tuning?style=for-the-badge&color=orange)
+![Downloads](https://img.shields.io/github/downloads/RP-Alpha/rpa-tuning/total?style=for-the-badge&logo=github&color=purple)
 
-## Installation
-1. Ensure `rpa-lib` is started.
-2. Add `ensure rpa-tuning` to your `server.cfg`.
+**Modern Vehicle Modification Shop**
 
-## Configuration
-Edit `client/main.lua` to add or modify shop locations.
+</div>
 
-## Credits
-- RP-Alpha Development Team
+---
 
-## License
-MIT
+## ✨ Features
+
+- 🎨 **Sleek UI** - Dark-themed sidebar menu
+- 🔧 **Full Mods** - Engine, brakes, suspension, and more
+- 🌈 **RGB Neons** - Full color customization with live preview
+- 💡 **Xenon Lights** - Custom headlight colors
+- 🎯 **Target Integration** - Third Eye at LSC locations
+
+---
+
+## 📥 Installation
+
+1. Download the [latest release](https://github.com/RP-Alpha/rpa-tuning/releases/latest)
+2. Extract to your `resources` folder
+3. Add to `server.cfg`:
+   ```cfg
+   ensure rpa-tuning
+   ```
+
+---
+
+## 📚 Usage
+
+Drive to Los Santos Customs and use Third Eye on the mod shop marker.
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/RP-Alpha">RP-Alpha</a></sub>
+</div>
