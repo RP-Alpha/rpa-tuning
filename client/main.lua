@@ -62,6 +62,36 @@ RegisterNUICallback('applyMod', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('applyLights', function(data, cb)
+    local ped = PlayerPedId()
+    local veh = GetVehiclePedIsIn(ped, false)
+    
+    if data.action == 'xenon' then
+        ToggleVehicleMod(veh, 22, not IsToggleModOn(veh, 22))
+    elseif data.action == 'neon_layout' then
+        SetVehicleNeonLightEnabled(veh, 0, true)
+        SetVehicleNeonLightEnabled(veh, 1, true)
+        SetVehicleNeonLightEnabled(veh, 2, true)
+        SetVehicleNeonLightEnabled(veh, 3, true)
+    elseif data.action == 'neon_clear' then
+        SetVehicleNeonLightEnabled(veh, 0, false)
+        SetVehicleNeonLightEnabled(veh, 1, false)
+        SetVehicleNeonLightEnabled(veh, 2, false)
+        SetVehicleNeonLightEnabled(veh, 3, false)
+    elseif data.action == 'neon_color' then
+        SetVehicleNeonLightsColour(veh, tonumber(data.r), tonumber(data.g), tonumber(data.b))
+    end
+    
+    cb('ok')
+end)
+
+RegisterNUICallback('previewNeon', function(data, cb)
+    local ped = PlayerPedId()
+    local veh = GetVehiclePedIsIn(ped, false)
+    SetVehicleNeonLightsColour(veh, tonumber(data.r), tonumber(data.g), tonumber(data.b))
+    cb('ok')
+end)
+
 -- Entry Point
 CreateThread(function()
     -- Add Blips / Zones for tuning shops

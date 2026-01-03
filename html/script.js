@@ -23,7 +23,8 @@ const categories = [
     { label: 'Bonnet', modType: 7 },
     { label: 'Fenders', modType: 8 },
     { label: 'Roof', modType: 10 },
-    { label: 'Colors', type: 'custom_color' }
+    { label: 'Colors', type: 'custom_color' },
+    { label: 'Lights', type: 'lights' }
 ];
 
 function setupCategories() {
@@ -48,6 +49,11 @@ function openModCategory(cat) {
     const container = document.getElementById('mods-container');
     container.innerHTML = 'Loading...';
 
+    if (cat.type === 'lights') {
+        renderLightsMenu(container, cat);
+        return;
+    }
+
     // Request mods from client
     fetch(`https://${GetParentResourceName()}/getMods`, {
         method: 'POST',
@@ -63,6 +69,78 @@ function openModCategory(cat) {
             btn.onclick = () => applyMod(cat, mod.index, mod.price);
             container.appendChild(btn);
         });
+    });
+}
+
+function renderLightsMenu(container, cat) {
+    container.innerHTML = `
+        <div class="lights-controls" style="color:white; padding:10px;">
+            <h3>Xenon Headlights</h3>
+            <button class="mod-btn" onclick="toggleXenon()">Toggle Xenon ($500)</button>
+            <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
+            <h3>Neon Layout</h3>
+            <button class="mod-btn" onclick="toggleNeon('all')">Install All Neons ($2000)</button>
+            <button class="mod-btn" style="background:#ef4444;" onclick="clearNeon()">Remove Neons</button>
+            <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
+            <h3>Neon Color (RGB)</h3>
+            <div style="display:flex; gap:10px; flex-direction:column;">
+                <label>R: <input type="range" id="neon-r" min="0" max="255" oninput="updateNeonColor()"></label>
+                <label>G: <input type="range" id="neon-g" min="0" max="255" oninput="updateNeonColor()"></label>
+                <label>B: <input type="range" id="neon-b" min="0" max="255" oninput="updateNeonColor()"></label>
+            </div>
+            <button class="mod-btn" style="margin-top:10px;" onclick="applyNeonColor()">Apply Color ($100)</button>
+        </div>
+    `;
+}
+
+function toggleXenon() {
+    fetch(`https://${GetParentResourceName()}/applyLights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'xenon' })
+    });
+}
+
+function toggleNeon(layout) {
+    fetch(`https://${GetParentResourceName()}/applyLights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'neon_layout', layout: layout })
+    });
+}
+
+function clearNeon() {
+    fetch(`https://${GetParentResourceName()}/applyLights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'neon_clear' })
+    });
+}
+
+function updateNeonColor() {
+    // Preview logic if we wanted live preview without confirm, 
+    // but typically we wait for apply. 
+    // We could add a debounce here for live preview.
+    const r = document.getElementById('neon-r').value;
+    const g = document.getElementById('neon-g').value;
+    const b = document.getElementById('neon-b').value;
+
+    fetch(`https://${GetParentResourceName()}/previewNeon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ r: r, g: g, b: b })
+    });
+}
+
+function applyNeonColor() {
+    const r = document.getElementById('neon-r').value;
+    const g = document.getElementById('neon-g').value;
+    const b = document.getElementById('neon-b').value;
+
+    fetch(`https://${GetParentResourceName()}/applyLights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'neon_color', r: r, g: g, b: b })
     });
 }
 
