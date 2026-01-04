@@ -2,20 +2,21 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'RP-Alpha'
-description 'RP-Alpha Tuning Shop'
-version '1.0.0'
+description 'RP-Alpha Tuning System - Mechanic shops + handling tuning'
+version '2.0.0'
 
 dependency 'rpa-lib'
 
-ui_page 'html/index.html'
+shared_script 'config.lua'
 
-files {
-    'html/index.html',
-    'html/style.css',
-    'html/script.js'
+client_scripts {
+    '@ox_lib/init.lua',
+    'client/main.lua'
 }
 
-client_script 'client/main.lua'
-server_script 'server/main.lua'
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'server/main.lua'
+}
 
 lua54 'yes'
