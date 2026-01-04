@@ -47,25 +47,33 @@ RegisterNUICallback('applyMod', function(data, cb)
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
     
-    -- In real impl: Verify money on server first
-    -- TriggerServerEvent('rpa-tuning:pay', data.price)
-    -- If success:
-    
-    if data.type == 'toggle' then
-        ToggleVehicleMod(veh, data.modType, data.modIndex)
-    elseif data.type == 'custom_color' then
-        SetVehicleColours(veh, data.modIndex, data.modIndex)
-    else
-        SetVehicleMod(veh, data.modType, data.modIndex, false)
+    if veh == 0 then
+        cb('error')
+        return
     end
+    
+    -- Send to server for payment verification
+    TriggerServerEvent('rpa-tuning:server:applyMod', {
+        type = data.type,
+        modType = data.modType,
+        modIndex = data.modIndex,
+        modLabel = data.modLabel or "Modification",
+        price = data.price or 100
+    })
     
     cb('ok')
 end)
 
+-- Secured mod application (only after server confirms payment)
 RegisterNetEvent('rpa-tuning:client:applyModSecured', function(data)
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
-    if data.type == 'custom_color' then
+    
+    if veh == 0 then return end
+    
+    if data.type == 'toggle' then
+        ToggleVehicleMod(veh, data.modType, data.modIndex == true)
+    elseif data.type == 'custom_color' then
         SetVehicleColours(veh, data.modIndex, data.modIndex)
     else
         SetVehicleMod(veh, data.modType, data.modIndex, false)
@@ -76,23 +84,53 @@ RegisterNUICallback('applyLights', function(data, cb)
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
     
+    if veh == 0 then
+        cb('error')
+        return
+    end
+    
     if data.action == 'xenon' then
-        ToggleVehicleMod(veh, 22, not IsToggleModOn(veh, 22))
+        -- Xenon costs money - go through server
+        TriggerServerEvent('rpa-tuning:server:applyMod', {
+            type = 'toggle',
+            modType = 22,
+            modIndex = not IsToggleModOn(veh, 22),
+            modLabel = "Xenon Headlights",
+            price = 1500
+        })
     elseif data.action == 'neon_layout' then
-        SetVehicleNeonLightEnabled(veh, 0, true)
-        SetVehicleNeonLightEnabled(veh, 1, true)
-        SetVehicleNeonLightEnabled(veh, 2, true)
-        SetVehicleNeonLightEnabled(veh, 3, true)
+        -- Neon installation costs money
+        TriggerServerEvent('rpa-tuning:server:applyNeon', {
+            action = 'install',
+            price = 2000
+        })
     elseif data.action == 'neon_clear' then
+        -- Free to remove
         SetVehicleNeonLightEnabled(veh, 0, false)
         SetVehicleNeonLightEnabled(veh, 1, false)
         SetVehicleNeonLightEnabled(veh, 2, false)
         SetVehicleNeonLightEnabled(veh, 3, false)
     elseif data.action == 'neon_color' then
+        -- Color change is free if neons already installed
         SetVehicleNeonLightsColour(veh, tonumber(data.r), tonumber(data.g), tonumber(data.b))
     end
     
     cb('ok')
+end)
+
+-- Secured neon application
+RegisterNetEvent('rpa-tuning:client:applyNeonSecured', function(data)
+    local ped = PlayerPedId()
+    local veh = GetVehiclePedIsIn(ped, false)
+    
+    if veh == 0 then return end
+    
+    if data.action == 'install' then
+        SetVehicleNeonLightEnabled(veh, 0, true)
+        SetVehicleNeonLightEnabled(veh, 1, true)
+        SetVehicleNeonLightEnabled(veh, 2, true)
+        SetVehicleNeonLightEnabled(veh, 3, true)
+    end
 end)
 
 RegisterNUICallback('previewNeon', function(data, cb)

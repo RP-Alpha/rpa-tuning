@@ -5,6 +5,8 @@ author 'RP-Alpha'
 description 'RP-Alpha Tuning Shop'
 version '1.0.0'
 
+dependency 'rpa-lib'
+
 ui_page 'html/index.html'
 
 files {
