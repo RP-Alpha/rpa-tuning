@@ -291,6 +291,11 @@ Config.Pricing = {
     
     -- Mechanic discount (percentage off when mechanic is on duty)
     mechanicDiscount = 30,
+
+    -- Global multiplier controlled by admin menu
+    defaultGlobalMultiplier = 1.0,
+    minGlobalMultiplier = 0.5,
+    maxGlobalMultiplier = 2.0,
 }
 
 -- ============================================

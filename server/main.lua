@@ -3,6 +3,7 @@
 
 local Shops = {}
 local VehicleHandling = {} -- Cache for handling modifications
+local PricingMultiplier = Config.Pricing and Config.Pricing.defaultGlobalMultiplier or 1.0
 
 -- ============================================
 -- INITIALIZATION
@@ -159,6 +160,19 @@ local function CanAccessShop(source, shop)
     return false, 0
 end
 
+local function NormalizeMultiplier(value)
+    local numberValue = tonumber(value)
+    if not numberValue then return PricingMultiplier end
+
+    local min = Config.Pricing.minGlobalMultiplier or 0.5
+    local max = Config.Pricing.maxGlobalMultiplier or 2.0
+
+    if numberValue < min then numberValue = min end
+    if numberValue > max then numberValue = max end
+
+    return math.floor(numberValue * 100) / 100
+end
+
 -- ============================================
 -- SHOP SYNC
 -- ============================================
@@ -171,6 +185,12 @@ RegisterNetEvent('rpa-tuning:server:requestShops', function()
     local isMechanic = HasMechanicPermission(src)
     local canPerformance = HasPerformancePermission(src)
     TriggerClientEvent('rpa-tuning:client:setMechanicStatus', src, isMechanic, canPerformance)
+    TriggerClientEvent('rpa-tuning:client:setPricingMultiplier', src, PricingMultiplier)
+end)
+
+RegisterNetEvent('rpa-tuning:server:requestPricingMultiplier', function()
+    local src = source
+    TriggerClientEvent('rpa-tuning:client:setPricingMultiplier', src, PricingMultiplier)
 end)
 
 RegisterNetEvent('rpa-tuning:server:reloadShops', function()
@@ -220,7 +240,8 @@ RegisterNetEvent('rpa-tuning:server:purchaseMod', function(data)
     
     if not player then return end
     
-    local price = data.price or 0
+    local basePrice = tonumber(data.price) or 0
+    local price = math.floor(basePrice * PricingMultiplier)
     local modLabel = data.modLabel or 'Modification'
     
     -- Verify shop access
@@ -272,7 +293,8 @@ RegisterNetEvent('rpa-tuning:server:purchaseHandling', function(data)
         return
     end
     
-    local price = data.price or 0
+    local basePrice = tonumber(data.price) or 0
+    local price = math.floor(basePrice * PricingMultiplier)
     
     -- Check money
     local cash = player.PlayerData.money.cash or 0
@@ -363,6 +385,20 @@ RegisterNetEvent('rpa-tuning:server:openAdminMenu', function()
     end
     
     TriggerClientEvent('rpa-tuning:client:openAdminMenu', src)
+end)
+
+RegisterNetEvent('rpa-tuning:server:setPricingMultiplier', function(multiplier)
+    local src = source
+
+    if not HasAdminPermission(src) then
+        exports['rpa-lib']:Notify(src, 'No permission', 'error')
+        return
+    end
+
+    PricingMultiplier = NormalizeMultiplier(multiplier)
+    TriggerClientEvent('rpa-tuning:client:setPricingMultiplier', -1, PricingMultiplier)
+
+    exports['rpa-lib']:Notify(src, ('Global pricing multiplier set to x%.2f'):format(PricingMultiplier), 'success')
 end)
 
 RegisterNetEvent('rpa-tuning:server:createShop', function(shopData)

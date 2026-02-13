@@ -7,6 +7,11 @@ local InTuningZone = false
 local IsMechanic = false
 local CanPerformanceTune = false
 local VehicleHandling = {} -- Cached handling modifications
+local PricingMultiplier = 1.0
+
+local function ApplyPricingMultiplier(price)
+    return math.floor((tonumber(price) or 0) * PricingMultiplier)
+end
 
 -- ============================================
 -- SHOP MANAGEMENT
@@ -47,6 +52,10 @@ end)
 RegisterNetEvent('rpa-tuning:client:setMechanicStatus', function(isMech, canPerf)
     IsMechanic = isMech
     CanPerformanceTune = canPerf
+end)
+
+RegisterNetEvent('rpa-tuning:client:setPricingMultiplier', function(multiplier)
+    PricingMultiplier = tonumber(multiplier) or 1.0
 end)
 
 -- ============================================
@@ -324,6 +333,7 @@ function OpenModLevelMenu(mod, modData)
         end
         
         local price = math.floor(basePrice * (1 + (i * Config.Pricing.levelMultiplier)))
+        price = ApplyPricingMultiplier(price)
         local finalPrice = math.floor(price * (1 - discount / 100))
         
         local isInstalled = currentMod == i
@@ -366,6 +376,7 @@ function OpenToggleMenu(mod, modData)
     
     local isOn = IsToggleModOn(veh, mod.modType)
     local basePrice = Config.Pricing.modPrices[mod.modType] or 1000
+    basePrice = ApplyPricingMultiplier(basePrice)
     local discount = CurrentShop and CurrentShop.discount or 0
     local finalPrice = math.floor(basePrice * (1 - discount / 100))
     
@@ -423,7 +434,7 @@ function OpenHandlingMenu()
         
         table.insert(options, {
             title = prop.label,
-            description = 'Current: ' .. string.format('%.2f', currentVal) .. ' | $' .. prop.price,
+            description = 'Current: ' .. string.format('%.2f', currentVal) .. ' | $' .. ApplyPricingMultiplier(prop.price),
             icon = 'fas fa-sliders-h',
             arrow = true,
             onSelect = function()
@@ -466,6 +477,7 @@ function OpenHandlingPropertyMenu(prop, currentVal)
     if veh == 0 then return end
     
     local plate = GetVehicleNumberPlateText(veh)
+    local adjustedPrice = ApplyPricingMultiplier(prop.price)
     
     local input = lib.inputDialog('Adjust ' .. prop.label, {
         {
@@ -492,7 +504,7 @@ function OpenHandlingPropertyMenu(prop, currentVal)
         -- Confirm and save
         local confirm = lib.alertDialog({
             header = 'Confirm Purchase',
-            content = 'Apply ' .. prop.label .. ' = ' .. string.format('%.2f', newVal) .. ' for $' .. prop.price .. '?',
+            content = 'Apply ' .. prop.label .. ' = ' .. string.format('%.2f', newVal) .. ' for $' .. adjustedPrice .. '?',
             centered = true,
             cancel = true
         })
@@ -502,7 +514,7 @@ function OpenHandlingPropertyMenu(prop, currentVal)
                 plate = plate,
                 property = prop.id,
                 value = newVal,
-                price = prop.price
+                price = adjustedPrice
             })
         else
             -- Revert preview
@@ -585,6 +597,7 @@ function OpenColorMenu(mod)
     local colorType = mod.modType:gsub('_color', '')
     local discount = CurrentShop and CurrentShop.discount or 0
     local basePrice = Config.Pricing[mod.modType] or 1000
+    basePrice = ApplyPricingMultiplier(basePrice)
     local finalPrice = math.floor(basePrice * (1 - discount / 100))
     
     local options = {}
@@ -622,7 +635,7 @@ function OpenTintMenu()
     local options = {}
     
     for _, tint in ipairs(Config.WindowTints) do
-        local finalPrice = math.floor(tint.price * (1 - discount / 100))
+        local finalPrice = math.floor(ApplyPricingMultiplier(tint.price) * (1 - discount / 100))
         
         table.insert(options, {
             title = tint.label,
@@ -659,7 +672,7 @@ end
 
 function OpenNeonMenu()
     local discount = CurrentShop and CurrentShop.discount or 0
-    local basePrice = Config.Pricing.neonInstall
+    local basePrice = ApplyPricingMultiplier(Config.Pricing.neonInstall)
     local finalPrice = math.floor(basePrice * (1 - discount / 100))
     
     local ped = PlayerPedId()
@@ -702,7 +715,7 @@ end
 
 function OpenNeonColorMenu()
     local discount = CurrentShop and CurrentShop.discount or 0
-    local basePrice = Config.Pricing.neonColor
+    local basePrice = ApplyPricingMultiplier(Config.Pricing.neonColor)
     local finalPrice = math.floor(basePrice * (1 - discount / 100))
     
     local ped = PlayerPedId()
@@ -780,6 +793,7 @@ end)
 CreateThread(function()
     Wait(1000)
     TriggerServerEvent('rpa-tuning:server:requestShops')
+    TriggerServerEvent('rpa-tuning:server:requestPricingMultiplier')
 end)
 
 -- Admin command
@@ -811,7 +825,24 @@ function OpenAdminMenu()
                 icon = 'fas fa-dollar-sign',
                 arrow = true,
                 onSelect = function()
-                    -- TODO: Pricing menu
+                    local input = lib.inputDialog('Pricing Multiplier', {
+                        {
+                            type = 'number',
+                            label = 'Global Multiplier',
+                            description = ('Current: x%.2f | Range: %.2f - %.2f'):format(
+                                PricingMultiplier,
+                                Config.Pricing.minGlobalMultiplier,
+                                Config.Pricing.maxGlobalMultiplier
+                            ),
+                            default = PricingMultiplier,
+                            min = Config.Pricing.minGlobalMultiplier,
+                            max = Config.Pricing.maxGlobalMultiplier
+                        }
+                    })
+
+                    if input and input[1] then
+                        TriggerServerEvent('rpa-tuning:server:setPricingMultiplier', input[1])
+                    end
                 end
             },
             {
